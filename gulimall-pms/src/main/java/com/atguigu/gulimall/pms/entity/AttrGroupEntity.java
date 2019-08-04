@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.pms.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
@@ -24,7 +25,7 @@ public class AttrGroupEntity implements Serializable {
 	/**
 	 * 分组id
 	 */
-	@TableId
+	@TableId(type = IdType.AUTO)
 	@ApiModelProperty(name = "attrGroupId",value = "分组id")
 	private Long attrGroupId;
 	/**

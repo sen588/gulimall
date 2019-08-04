@@ -5,6 +5,9 @@ import com.aliyun.oss.common.utils.BinaryUtil;
 import com.aliyun.oss.model.MatchMode;
 import com.aliyun.oss.model.PolicyConditions;
 import com.atguigu.gulimall.commons.bean.Resp;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,21 +18,34 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@RefreshScope
 @RestController
 @RequestMapping("/pms/oss/")
 public class PmsOosController {
 
-    String accessId = "LTAI0Vl5nGVVVDgK";      // 请填写您的AccessKeyId。
-    String accessKey = "R4EjU39VuTH6KyNl9tnAf1TAPCnSby"; // 请填写您的AccessKeySecret。
-    String endpoint = "oss-cn-shanghai.aliyuncs.com"; // 请填写您的 endpoint。
-    String bucket = "gulimall-fore";                    // 请填写您的 bucketname 。
-    String host = "https://" + bucket + "." + endpoint; // host的格式为 bucketname.endpoint
+    //请填写您的AccessKeyId
+    @Value("${accessId}")
+    private String accessId;
 
-    // callbackUrl为上传回调服务器的URL，请将下面的IP和Port配置为您自己的真实信息。
+    //请填写您的AccessKeySecret
+    @Value("${accessKey}")
+    private String accessKey;
 
+    //请填写您的 endpoint
+    @Value("${endpoint}")
+    private String endpoint;
+
+    //请填写您的 bucketname
+    @Value("${bucket}")
+    private String bucket;
+
+    /*
+    callbackUrl为上传回调服务器的URL，请将下面的IP和Port配置为您自己的真实信息
+     */
     @GetMapping("policy")
     public Resp<Object> osspolicy() throws UnsupportedEncodingException {
-
+        //host的格式为 bucketname.endpoint
+        String host = "https://" + bucket + "." + endpoint;
         String dir = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         OSSClient client = new OSSClient(endpoint, accessId, accessKey);
 

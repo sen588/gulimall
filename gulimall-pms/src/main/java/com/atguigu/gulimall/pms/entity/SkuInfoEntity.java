@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.pms.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
@@ -25,7 +26,7 @@ public class SkuInfoEntity implements Serializable {
 	/**
 	 * skuId
 	 */
-	@TableId
+	@TableId(type = IdType.AUTO)
 	@ApiModelProperty(name = "skuId",value = "skuId")
 	private Long skuId;
 	/**

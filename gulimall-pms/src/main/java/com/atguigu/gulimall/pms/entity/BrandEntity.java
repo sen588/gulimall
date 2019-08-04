@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.pms.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
@@ -24,7 +25,7 @@ public class BrandEntity implements Serializable {
 	/**
 	 * 品牌id
 	 */
-	@TableId
+	@TableId(type = IdType.AUTO)
 	@ApiModelProperty(name = "brandId",value = "品牌id")
 	private Long brandId;
 	/**

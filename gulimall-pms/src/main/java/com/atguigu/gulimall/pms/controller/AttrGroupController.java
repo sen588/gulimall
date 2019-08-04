@@ -1,14 +1,24 @@
 package com.atguigu.gulimall.pms.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 
 import com.atguigu.gulimall.commons.bean.PageVo;
 import com.atguigu.gulimall.commons.bean.QueryCondition;
 import com.atguigu.gulimall.commons.bean.Resp;
+import com.atguigu.gulimall.pms.entity.AttrAttrgroupRelationEntity;
+import com.atguigu.gulimall.pms.entity.AttrEntity;
+import com.atguigu.gulimall.pms.service.AttrAttrgroupRelationService;
+import com.atguigu.gulimall.pms.service.AttrService;
+import com.atguigu.gulimall.pms.service.CategoryService;
+import com.atguigu.gulimall.pms.vo.AttrGroupWithattrsVo;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +42,48 @@ import com.atguigu.gulimall.pms.service.AttrGroupService;
 public class AttrGroupController {
     @Autowired
     private AttrGroupService attrGroupService;
+
+    @Autowired
+    private AttrAttrgroupRelationService relationService;
+
+    @Autowired
+    private AttrService attrService;
+    /**
+     * 属性信息
+     */
+    @ApiOperation("查询某个分组以及分组下面的所有属性信息")
+    @GetMapping("/info/withattrs/{attrGroupId}")
+    public Resp<AttrGroupWithattrsVo> infoWithattrs(@PathVariable("attrGroupId") Long attrGroupId)
+    {
+        AttrGroupWithattrsVo attrVo = new AttrGroupWithattrsVo();
+        //查询出当前分组的信息
+        AttrGroupEntity attrGroupEntity = attrGroupService.getById(attrGroupId);
+        BeanUtils.copyProperties(attrGroupEntity, attrVo);
+
+        //查询出当前分组信息和属性的所有关系
+        List<AttrAttrgroupRelationEntity> relations = relationService.list(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_group_id", attrGroupId));
+        attrVo.setRelations(relations);
+        //将要查询的分组id存入List集合中
+        ArrayList<Long> attrIds = new ArrayList<>();
+        relations.forEach(relation -> {
+            attrIds.add(relation.getAttrId());
+        });
+        //查询当前分组所有的信息
+        List<AttrEntity> entities = attrService.list(new QueryWrapper<AttrEntity>().in("attr_id", attrIds));
+        attrVo.setAttrEntities(entities);
+        return Resp.ok(attrVo);
+    }
+    /**
+     * 所有分组属性
+     */
+    @ApiOperation("查询某个分组下对应的所有属性")
+    @GetMapping("/list/category/{groupId}")
+    public Resp<PageVo> groupList(QueryCondition queryCondition,
+                                  @PathVariable("groupId") Long groupId)
+    {
+        PageVo page = attrGroupService.getPageListGroupId(queryCondition, groupId);
+        return Resp.ok(page);
+    }
 
     /**
      * 列表
