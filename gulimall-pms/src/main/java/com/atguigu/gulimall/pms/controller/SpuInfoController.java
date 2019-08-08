@@ -8,10 +8,14 @@ import java.util.Map;
 import com.atguigu.gulimall.commons.bean.PageVo;
 import com.atguigu.gulimall.commons.bean.QueryCondition;
 import com.atguigu.gulimall.commons.bean.Resp;
+import com.atguigu.gulimall.pms.fegin.PmsSkuBoundsFeginService;
+import com.atguigu.gulimall.pms.vo.BaseAttrsVo;
+import com.atguigu.gulimall.pms.vo.SpuAllSaveVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +39,9 @@ import com.atguigu.gulimall.pms.service.SpuInfoService;
 public class SpuInfoController {
     @Autowired
     private SpuInfoService spuInfoService;
+
+    @Autowired
+    PmsSkuBoundsFeginService pmsSkuBoundsFeginService;
     /**
      * 检索
      */
@@ -80,9 +87,8 @@ public class SpuInfoController {
     @ApiOperation("保存")
     @PostMapping("/save")
     @PreAuthorize("hasAuthority('pms:spuinfo:save')")
-    public Resp<Object> save(@RequestBody SpuInfoEntity spuInfo){
-		spuInfoService.save(spuInfo);
-
+    public Resp<Object> save(@RequestBody SpuAllSaveVo allSaveVo){
+        spuInfoService.saveSpuAll(allSaveVo);
         return Resp.ok(null);
     }
 

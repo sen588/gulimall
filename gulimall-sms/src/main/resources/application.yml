@@ -9,3 +9,6 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/sms/*.xml
+  global-config:
+    db-config:
+      id-type: auto

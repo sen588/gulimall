@@ -26,7 +26,7 @@ public class SkuInfoEntity implements Serializable {
 	/**
 	 * skuId
 	 */
-	@TableId(type = IdType.AUTO)
+	@TableId
 	@ApiModelProperty(name = "skuId",value = "skuId")
 	private Long skuId;
 	/**

@@ -1,8 +1,12 @@
 package com.atguigu.gulimall.sms.dao;
 
+import com.atguigu.gulimall.commons.to.SkuSaleInfoTo;
 import com.atguigu.gulimall.sms.entity.SkuBoundsEntity;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 商品sku积分设置
@@ -13,5 +17,5 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface SkuBoundsDao extends BaseMapper<SkuBoundsEntity> {
-	
+
 }

@@ -25,7 +25,7 @@ public class AttrEntity implements Serializable {
 	/**
 	 * 属性id
 	 */
-	@TableId(type = IdType.AUTO)
+	@TableId
 	@ApiModelProperty(name = "attrId",value = "属性id")
 	private Long attrId;
 	/**

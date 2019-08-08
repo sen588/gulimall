@@ -25,7 +25,7 @@ public class AttrAttrgroupRelationEntity implements Serializable {
 	/**
 	 * id
 	 */
-	@TableId(type = IdType.AUTO)
+	@TableId
 	@ApiModelProperty(name = "id",value = "id")
 	private Long id;
 	/**

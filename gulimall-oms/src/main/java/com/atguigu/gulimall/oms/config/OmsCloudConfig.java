@@ -6,6 +6,5 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.atguigu.gulimall.oms.fegin")
 public class OmsCloudConfig {
 }

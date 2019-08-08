@@ -25,7 +25,7 @@ public class CategoryEntity implements Serializable {
 	/**
 	 * 分类id
 	 */
-	@TableId(type = IdType.AUTO)
+	@TableId
 	@ApiModelProperty(name = "catId",value = "分类id")
 	private Long catId;
 	/**

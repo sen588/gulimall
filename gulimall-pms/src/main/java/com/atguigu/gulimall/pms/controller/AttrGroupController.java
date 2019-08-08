@@ -48,6 +48,7 @@ public class AttrGroupController {
 
     @Autowired
     private AttrService attrService;
+
     /**
      * 属性信息
      */
@@ -77,11 +78,11 @@ public class AttrGroupController {
      * 所有分组属性
      */
     @ApiOperation("查询某个分组下对应的所有属性")
-    @GetMapping("/list/category/{groupId}")
+    @GetMapping("/list/category/{catId}")
     public Resp<PageVo> groupList(QueryCondition queryCondition,
-                                  @PathVariable("groupId") Long groupId)
+                                  @PathVariable("catId") Long catId)
     {
-        PageVo page = attrGroupService.getPageListGroupId(queryCondition, groupId);
+        PageVo page = attrGroupService.getPageListGroupId(queryCondition, catId);
         return Resp.ok(page);
     }
 

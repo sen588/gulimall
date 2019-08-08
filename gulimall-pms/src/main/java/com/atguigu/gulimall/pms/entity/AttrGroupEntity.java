@@ -25,7 +25,7 @@ public class AttrGroupEntity implements Serializable {
 	/**
 	 * 分组id
 	 */
-	@TableId(type = IdType.AUTO)
+	@TableId
 	@ApiModelProperty(name = "attrGroupId",value = "分组id")
 	private Long attrGroupId;
 	/**

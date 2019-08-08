@@ -36,15 +36,15 @@ public class CouponController {
     /**
      * 列表
      */
-    @ApiOperation("分页查询(排序)")
-    @GetMapping("/list")
-    @PreAuthorize("hasAuthority('sms:coupon:list')")
-    public Resp<PageVo> list(QueryCondition queryCondition) {
-        PageVo page = couponService.queryPage(queryCondition);
+    @ApiOperation("查询出优惠卷信息")
+    @GetMapping("/list/{key}")
+    public Resp<PageVo> list(QueryCondition queryCondition,
+                             @PathVariable("key") String key) {
+        //PageVo page = couponService.queryPageKeyById(queryCondition, key);
+        PageVo data = couponService.queryPage(queryCondition);
 
-        return Resp.ok(page);
+        return Resp.ok(data);
     }
-
 
     /**
      * 信息

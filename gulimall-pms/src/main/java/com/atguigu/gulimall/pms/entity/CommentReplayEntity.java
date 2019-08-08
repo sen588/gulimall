@@ -25,7 +25,7 @@ public class CommentReplayEntity implements Serializable {
 	/**
 	 * id
 	 */
-	@TableId(type = IdType.AUTO)
+	@TableId
 	@ApiModelProperty(name = "id",value = "id")
 	private Long id;
 	/**

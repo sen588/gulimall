@@ -12,5 +12,12 @@
         <result property="work" column="work"/>
     </resultMap>
 
-
+    <!--    void insertSkuSaleInfoBatch(@Param("to") List<SkuSaleInfoTo> to);-->
+    <!--<insert id="insertSkuSaleInfoBatch">
+        insert into `sms_spu_bounds`(spu_id,grow_bounds,buy_bounds,`work`)
+        values
+        <foreach collection="to" item="to" separator=",">
+            (#{to.spuId},#{to.growBounds},#{to.buyBounds},#{to.work})
+        </foreach>
+    </insert>-->
 </mapper>
