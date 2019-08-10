@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.wms.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -8,9 +9,11 @@ import java.util.Map;
 import com.atguigu.gulimall.commons.bean.PageVo;
 import com.atguigu.gulimall.commons.bean.QueryCondition;
 import com.atguigu.gulimall.commons.bean.Resp;
+import com.atguigu.gulimall.commons.to.SkuStockVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +38,23 @@ public class WareSkuController {
     @Autowired
     private WareSkuService wareSkuService;
 
+    /**
+     * sku
+     */
+    @ApiOperation("获取某个sku的库存信息")
+    @PostMapping("/skus")
+    public Resp<List<SkuStockVo>> skuWareInfos(@RequestBody List<Long> skuId)
+    {
+        List<WareSkuEntity> data = wareSkuService.list(new QueryWrapper<WareSkuEntity>()
+                .in("sku_id", skuId));
+        ArrayList<SkuStockVo> vos = new ArrayList<>();
+        for (WareSkuEntity sku: data) {
+            SkuStockVo vo = new SkuStockVo();
+            BeanUtils.copyProperties(sku, vo);
+            vos.add(vo);
+        }
+        return Resp.ok(vos);
+    }
 
     /**
      * sku

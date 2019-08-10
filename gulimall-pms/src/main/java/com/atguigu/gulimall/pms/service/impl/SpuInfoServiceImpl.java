@@ -1,10 +1,16 @@
 package com.atguigu.gulimall.pms.service.impl;
 
+import com.atguigu.gulimall.commons.bean.Resp;
 import com.atguigu.gulimall.commons.to.SkuSaleInfoTo;
+import com.atguigu.gulimall.commons.to.SkuStockVo;
+import com.atguigu.gulimall.commons.to.es.EsSkuAttributeValue;
+import com.atguigu.gulimall.commons.to.es.EsSkuVo;
 import com.atguigu.gulimall.commons.utils.AppUtils;
 import com.atguigu.gulimall.pms.dao.*;
 import com.atguigu.gulimall.pms.entity.*;
 import com.atguigu.gulimall.pms.fegin.PmsSkuBoundsFeginService;
+import com.atguigu.gulimall.pms.fegin.SearchFeignService;
+import com.atguigu.gulimall.pms.fegin.WmsFeginService;
 import com.atguigu.gulimall.pms.vo.BaseAttrsVo;
 import com.atguigu.gulimall.pms.vo.SaleAttrsVo;
 import com.atguigu.gulimall.pms.vo.SkusVo;
@@ -52,11 +58,22 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Autowired
     private SkuSaleAttrValueDao skuSaleAttrValueDao;
 
+    @Autowired
+    private BrandDao brandDao;
+
+    @Autowired
+    private CategoryDao categoryDao;
     /**
      * 远程调用
      */
     @Autowired
     private PmsSkuBoundsFeginService pmsSkuBoundsFeginService;
+
+    @Autowired
+    private SearchFeignService searchFeignService;
+
+    @Autowired
+    private WmsFeginService wmsFeginService;
 
     @Override
     public PageVo queryPage(QueryCondition params) {
@@ -211,5 +228,152 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         }
         //调用远程方法
         pmsSkuBoundsFeginService.saveSkuSaleInfo(tos);
+    }
+
+    @Override
+    public void updateSpuStatus(Long spuId, Integer status)
+    {
+        //上架状态[0 - 下架，1 - 上架]
+        if(status == 1)
+        {
+            //上架
+            this.Grounding(spuId);
+        }else {
+            //下架
+            this.Undercarriage(spuId);
+        }
+    }
+
+    /**
+     * 商品上架
+     * @param spuId
+     */
+    @Override
+    public void Grounding(Long spuId) {
+        //查询需要的信息
+        SpuInfoEntity spuInfoEntity = baseMapper.selectById(spuId);
+        BrandEntity brandEntity = brandDao.selectById(spuInfoEntity.getBrandId());
+        CategoryEntity categoryEntity = categoryDao.selectById(spuInfoEntity.getCatalogId());
+
+        //将商品需要检索的信息放在es中、下架：将商品需要检索的信息从es中删除；
+        List<EsSkuVo> skuVos = new ArrayList<>();
+        List<SkuInfoEntity> skus = skuInfoDao.selectList(new QueryWrapper<SkuInfoEntity>()
+                .eq("spu_id", spuId));
+
+        ArrayList<Long> skuIds = new ArrayList<>();
+        for (SkuInfoEntity sku: skus) {
+            skuIds.add(sku.getSkuId());
+        }
+        Resp<List<SkuStockVo>> infos = wmsFeginService.skuWareInfos(skuIds);
+        List<SkuStockVo> skuStockVos = infos.getData();
+
+        List<ProductAttrValueEntity> spu_id = productAttrValueDao.selectList(new QueryWrapper<ProductAttrValueEntity>()
+                .eq("spu_id", spuId));
+        //过滤出可以被检索的
+        List<Long> attrIds = new ArrayList<>();
+        spu_id.forEach((item)-> {
+            attrIds.add(item.getAttrId());
+        });
+        List<AttrEntity> list = attrDao.selectList(new QueryWrapper<AttrEntity>()
+                .in("attr_id", attrIds));
+
+        ArrayList<EsSkuAttributeValue> esSkuAttributeValues = new ArrayList<>();
+        list.forEach((item) -> {
+            Long attrId = item.getAttrId();
+            spu_id.forEach((s) -> {
+                if(attrId == s.getAttrId())
+                {
+                    EsSkuAttributeValue value = new EsSkuAttributeValue();
+                    value.setId(s.getId());
+                    value.setName(s.getAttrName());
+                    value.setProductAttributeId(s.getAttrId());
+                    value.setSpuId(s.getSpuId());
+                    value.setValue(s.getAttrValue());
+                    esSkuAttributeValues.add(value);
+                }
+            });
+        });
+        //远程检索
+        if(skus != null && skus.size() > 0)
+        {
+            skus.forEach(skuInfoEntity -> {
+                EsSkuVo skuVo = skuInfoToEsSkuVo(skuInfoEntity,brandEntity,categoryEntity,skuStockVos,esSkuAttributeValues);
+                skuVos.add(skuVo);
+            });
+            Resp<Object> resp = searchFeignService.spuUp(skuVos);
+            if(resp.getCode() == 0)
+            {
+                //修改数据库状态
+                SpuInfoEntity entity = new SpuInfoEntity();
+                entity.setId(spuId);
+                entity.setPublishStatus(1);
+                entity.setUodateTime(new Date());
+                baseMapper.updateById(entity);
+            }
+        }
+    }
+
+    /**
+     * 将SkuInfoEntity加工成EsSkuVo
+     * @param sku
+     * @param brandEntity
+     * @param categoryEntity
+     * @param skuStockVos
+     * @param productAttrValueEntities
+     * @return
+     */
+    private EsSkuVo skuInfoToEsSkuVo(
+                    SkuInfoEntity sku,
+                    BrandEntity brandEntity,
+                    CategoryEntity categoryEntity,
+                    List<SkuStockVo> skuStockVos,
+                    List<EsSkuAttributeValue> productAttrValueEntities)
+    {
+        EsSkuVo vo = new EsSkuVo();
+        vo.setId(sku.getSkuId());
+        vo.setBrandId(sku.getBrandId());
+        //品牌名
+        if (brandEntity != null)
+        {
+            vo.setBrandName(brandEntity.getName());
+        }
+        //搜索的标题
+        vo.setName(sku.getSkuTitle());
+        //sku的图片
+        vo.setPic(sku.getSkuDefaultImg());
+        //sku的价格
+        vo.setPrice(sku.getPrice());
+        //所属分类的id
+        vo.setProductCategoryId(sku.getCatalogId());
+        if (categoryEntity != null)
+        {
+            //所属分类的名字
+            vo.setProductCategoryName(categoryEntity.getName());
+        }
+        vo.setSale(0);
+        vo.setSort(0);
+        //保存自己的库存
+        skuStockVos.forEach((item)->{
+            if(item.getSkuId() == sku.getSkuId())
+            {
+                vo.setStock(item.getStock());
+            }
+        });
+        vo.setAttrValueList(productAttrValueEntities);
+        return vo;
+    }
+        /**
+         * 商品下架
+         * @param spuId
+         */
+    @Override
+    public void Undercarriage(Long spuId) {
+        List<EsSkuVo> vo = new ArrayList<>();
+        SpuInfoEntity spuInfoEntity = new SpuInfoEntity();
+        spuInfoEntity.setId(spuId);
+        spuInfoEntity.setPublishStatus(0);
+        baseMapper.updateById(spuInfoEntity);
+        System.out.println("商品开始下架");
+        searchFeignService.spuUp(vo);
     }
 }

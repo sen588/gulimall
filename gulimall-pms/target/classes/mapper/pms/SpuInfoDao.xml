@@ -11,7 +11,7 @@
         <result property="catalogId" column="catalog_id"/>
         <result property="brandId" column="brand_id"/>
         <result property="publishStatus" column="publish_status"/>
-        <result property="createTime" column="create_time"/>
+        <result property="createTime" column="create_time" />
         <result property="uodateTime" column="uodate_time"/>
     </resultMap>
 </mapper>

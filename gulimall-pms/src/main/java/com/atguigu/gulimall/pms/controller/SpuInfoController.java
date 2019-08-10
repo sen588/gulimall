@@ -43,6 +43,17 @@ public class SpuInfoController {
     @Autowired
     PmsSkuBoundsFeginService pmsSkuBoundsFeginService;
     /**
+     * 调用搜索远程服务（gulimall-search）
+     */
+    @ApiOperation("商品上架/下架")
+    @GetMapping("/updateStatus/{spuId}")
+    public Resp<Object> updateSpuStatus(@PathVariable("spuId") Long spuId,
+                                        @RequestParam(value = "status") Integer status)
+    {
+        spuInfoService.updateSpuStatus(spuId,status);
+        return Resp.ok(null);
+    }
+    /**
      * 检索
      */
     @ApiOperation("分类id检索商品")
