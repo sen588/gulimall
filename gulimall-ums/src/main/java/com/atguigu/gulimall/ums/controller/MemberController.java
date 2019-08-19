@@ -7,6 +7,11 @@ import java.util.Map;
 import com.atguigu.gulimall.commons.bean.PageVo;
 import com.atguigu.gulimall.commons.bean.QueryCondition;
 import com.atguigu.gulimall.commons.bean.Resp;
+import com.atguigu.gulimall.commons.exception.LoginPasswordException;
+import com.atguigu.gulimall.commons.exception.LoginUsernameException;
+import com.atguigu.gulimall.ums.vo.MemberLoginVo;
+import com.atguigu.gulimall.ums.vo.MemberRegistVo;
+import com.atguigu.gulimall.ums.vo.MemberRespVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +38,38 @@ public class MemberController {
     @Autowired
     private MemberService memberService;
 
+
+    @ApiOperation("用户登陆功能实现")
+    @GetMapping("/login")
+    public Resp<Object> login(MemberLoginVo vo)
+    {
+        MemberRespVo vos;
+        try {
+            vos = memberService.getLoginById(vo);
+            return Resp.ok(vos);
+        } catch (LoginUsernameException e) {
+            return Resp.fail(e.getMessage());
+        } catch (LoginPasswordException e) {
+            return Resp.fail(e.getMessage());
+        }
+    }
+
+    @ApiOperation("用户注册功能实现")
+    @PostMapping("/register")
+    public Resp<String> register(MemberRegistVo vo)
+    {
+        /**
+         * -1 失败、0  成功、1 用户名重复、2 手机号码重复、3 电子邮件重复
+         */
+        switch (memberService.insertRegisterById(vo))
+        {
+            case 0 : return Resp.ok("恭喜你，注册成功。");
+            case 1 : return Resp.fail("此用户名已存在！！！");
+            case 2 : return Resp.fail("此手机号已存在！！！");
+            case 3 : return Resp.fail("此电子邮已存在！！！");
+        }
+        return Resp.fail("注册信息错误，请重新注册！！！");
+    }
     /**
      * 列表
      */

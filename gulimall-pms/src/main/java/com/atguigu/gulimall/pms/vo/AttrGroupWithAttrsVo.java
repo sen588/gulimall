@@ -8,9 +8,10 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class AttrGroupWithattrsVo extends AttrGroupEntity {
+public class AttrGroupWithAttrsVo extends AttrGroupEntity {
+
+    private List<AttrEntity> attrEntities;
 
     private List<AttrAttrgroupRelationEntity> relations;
 
-    private List<AttrEntity> attrEntities;
 }

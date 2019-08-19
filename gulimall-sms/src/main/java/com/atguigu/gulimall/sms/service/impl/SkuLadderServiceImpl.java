@@ -1,7 +1,8 @@
 package com.atguigu.gulimall.sms.service.impl;
 
 import org.springframework.stereotype.Service;
-import java.util.Map;
+
+import java.util.List;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,10 +22,9 @@ public class SkuLadderServiceImpl extends ServiceImpl<SkuLadderDao, SkuLadderEnt
     public PageVo queryPage(QueryCondition params) {
         IPage<SkuLadderEntity> page = this.page(
                 new Query<SkuLadderEntity>().getPage(params),
-                new QueryWrapper<SkuLadderEntity>()
+                new QueryWrapper<>()
         );
 
         return new PageVo(page);
     }
-
 }

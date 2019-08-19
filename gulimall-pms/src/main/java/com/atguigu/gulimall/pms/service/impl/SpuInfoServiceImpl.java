@@ -11,9 +11,9 @@ import com.atguigu.gulimall.pms.entity.*;
 import com.atguigu.gulimall.pms.fegin.PmsSkuBoundsFeginService;
 import com.atguigu.gulimall.pms.fegin.SearchFeignService;
 import com.atguigu.gulimall.pms.fegin.WmsFeginService;
-import com.atguigu.gulimall.pms.vo.BaseAttrsVo;
-import com.atguigu.gulimall.pms.vo.SaleAttrsVo;
-import com.atguigu.gulimall.pms.vo.SkusVo;
+import com.atguigu.gulimall.pms.vo.BaseAttrVo;
+import com.atguigu.gulimall.pms.vo.SaleAttrVo;
+import com.atguigu.gulimall.pms.vo.SkuVo;
 import com.atguigu.gulimall.pms.vo.SpuAllSaveVo;
 import io.seata.spring.annotation.GlobalTransactional;
 import org.springframework.aop.framework.AopContext;
@@ -150,10 +150,10 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     @Transactional
     @Override
-    public void saveBaseAttrsById(Long spuId, List<BaseAttrsVo> baseAttrs) {
+    public void saveBaseAttrsById(Long spuId, List<BaseAttrVo> baseAttrs) {
         ArrayList<ProductAttrValueEntity> attrEntity = new ArrayList<>();
 
-        for (BaseAttrsVo baseAttr : baseAttrs) {
+        for (BaseAttrVo baseAttr : baseAttrs) {
             ProductAttrValueEntity attrValueEntity = new ProductAttrValueEntity();
             attrValueEntity.setSpuId(spuId);
             attrValueEntity.setAttrId(baseAttr.getAttrId());
@@ -173,11 +173,11 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
      */
     @Transactional
     @Override
-    public void saveSkusBaseById(Long spuId, List<SkusVo> skus) {
+    public void saveSkusBaseById(Long spuId, List<SkuVo> skus) {
         SpuInfoEntity spuEntity = baseMapper.selectById(spuId);
 
         List<SkuSaleInfoTo> tos = new ArrayList<>();
-        for (SkusVo sku : skus) {
+        for (SkuVo sku : skus) {
             SkuInfoEntity skuInfoEntity = new SkuInfoEntity();
             String[] images = sku.getImages();
             skuInfoEntity.setSpuId(spuEntity.getId());
@@ -208,8 +208,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 skuImagesDao.insert(imagesEntity);
             }
             //保存sku销售属性组合
-            List<SaleAttrsVo> saleAttrs = sku.getSaleAttrs();
-            for (SaleAttrsVo saleAttr : saleAttrs) {
+            List<SaleAttrVo> saleAttrs = sku.getSaleAttrs();
+            for (SaleAttrVo saleAttr : saleAttrs) {
                 SkuSaleAttrValueEntity skuSaleAttrValueEntity = new SkuSaleAttrValueEntity();
                 skuSaleAttrValueEntity.setAttrId(saleAttr.getAttrId());
                 AttrEntity attrEntity = attrDao.selectById(saleAttr.getAttrId());
@@ -362,18 +362,29 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         vo.setAttrValueList(productAttrValueEntities);
         return vo;
     }
-        /**
-         * 商品下架
-         * @param spuId
-         */
+
+    /**
+     * 商品下架
+     * @param spuId
+     */
     @Override
     public void Undercarriage(Long spuId) {
-        List<EsSkuVo> vo = new ArrayList<>();
-        SpuInfoEntity spuInfoEntity = new SpuInfoEntity();
-        spuInfoEntity.setId(spuId);
-        spuInfoEntity.setPublishStatus(0);
-        baseMapper.updateById(spuInfoEntity);
-        System.out.println("商品开始下架");
-        searchFeignService.spuUp(vo);
+        List<SkuInfoEntity> skuInfoEntities = skuInfoDao.selectList(new QueryWrapper<SkuInfoEntity>()
+                        .eq("spu_id", spuId));
+        List<Long> spuIds = new ArrayList<>();
+        skuInfoEntities.forEach(sku -> {
+            spuIds.add(sku.getSkuId());
+        });
+        //远程调用es进行删除
+        Resp<Object> resp = searchFeignService.spuDel(spuIds);
+        if(resp.getCode() == 0)
+        {
+            //将数据库商品上架状态改为 0 下架
+            SpuInfoEntity spuInfoEntity = new SpuInfoEntity();
+            spuInfoEntity.setId(spuId);
+            spuInfoEntity.setPublishStatus(0);
+            spuInfoEntity.setUodateTime(new Date());
+            baseMapper.updateById(spuInfoEntity);
+        }
     }
 }

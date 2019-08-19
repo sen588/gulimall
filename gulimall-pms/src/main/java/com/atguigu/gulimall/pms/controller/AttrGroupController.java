@@ -3,7 +3,6 @@ package com.atguigu.gulimall.pms.controller;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 
 import com.atguigu.gulimall.commons.bean.PageVo;
@@ -13,8 +12,7 @@ import com.atguigu.gulimall.pms.entity.AttrAttrgroupRelationEntity;
 import com.atguigu.gulimall.pms.entity.AttrEntity;
 import com.atguigu.gulimall.pms.service.AttrAttrgroupRelationService;
 import com.atguigu.gulimall.pms.service.AttrService;
-import com.atguigu.gulimall.pms.service.CategoryService;
-import com.atguigu.gulimall.pms.vo.AttrGroupWithattrsVo;
+import com.atguigu.gulimall.pms.vo.AttrGroupWithAttrsVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -54,9 +52,9 @@ public class AttrGroupController {
      */
     @ApiOperation("查询某个分组以及分组下面的所有属性信息")
     @GetMapping("/info/withattrs/{attrGroupId}")
-    public Resp<AttrGroupWithattrsVo> infoWithattrs(@PathVariable("attrGroupId") Long attrGroupId)
+    public Resp<AttrGroupWithAttrsVo> infoWithattrs(@PathVariable("attrGroupId") Long attrGroupId)
     {
-        AttrGroupWithattrsVo attrVo = new AttrGroupWithattrsVo();
+        AttrGroupWithAttrsVo attrVo = new AttrGroupWithAttrsVo();
         //查询出当前分组的信息
         AttrGroupEntity attrGroupEntity = attrGroupService.getById(attrGroupId);
         BeanUtils.copyProperties(attrGroupEntity, attrVo);

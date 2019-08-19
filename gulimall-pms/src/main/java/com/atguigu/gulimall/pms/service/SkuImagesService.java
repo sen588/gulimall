@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.pms.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.atguigu.gulimall.pms.entity.SkuImagesEntity;
 import com.atguigu.gulimall.commons.bean.PageVo;

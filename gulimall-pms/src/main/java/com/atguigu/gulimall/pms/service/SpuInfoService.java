@@ -1,8 +1,7 @@
 package com.atguigu.gulimall.pms.service;
 
-import com.atguigu.gulimall.commons.to.SkuSaleInfoTo;
-import com.atguigu.gulimall.pms.vo.BaseAttrsVo;
-import com.atguigu.gulimall.pms.vo.SkusVo;
+import com.atguigu.gulimall.pms.vo.BaseAttrVo;
+import com.atguigu.gulimall.pms.vo.SkuVo;
 import com.atguigu.gulimall.pms.vo.SpuAllSaveVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.atguigu.gulimall.pms.entity.SpuInfoEntity;
@@ -34,9 +33,9 @@ public interface SpuInfoService extends IService<SpuInfoEntity> {
 
     void saveSpuInfoIamgeById(Long spuId, String[] spuImages);
 
-    void saveBaseAttrsById(Long spuId, List<BaseAttrsVo> baseAttrs);
+    void saveBaseAttrsById(Long spuId, List<BaseAttrVo> baseAttrs);
 
-    void saveSkusBaseById(Long spuId, List<SkusVo> skus);
+    void saveSkusBaseById(Long spuId, List<SkuVo> skus);
 
     void updateSpuStatus(Long spuId, Integer status);
 

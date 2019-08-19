@@ -4,8 +4,7 @@ import com.atguigu.gulimall.pms.dao.AttrAttrgroupRelationDao;
 import com.atguigu.gulimall.pms.dao.AttrDao;
 import com.atguigu.gulimall.pms.entity.AttrAttrgroupRelationEntity;
 import com.atguigu.gulimall.pms.entity.AttrEntity;
-import com.atguigu.gulimall.pms.service.AttrAttrgroupRelationService;
-import com.atguigu.gulimall.pms.vo.AttrGroupWithattrsVo;
+import com.atguigu.gulimall.pms.vo.AttrGroupWithAttrsVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,10 +54,10 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
         //查出的所有分组  3
         List<AttrGroupEntity> records = data.getRecords();
         //将要返回出去的带分组信息以及他的属性信息的对象
-        List<AttrGroupWithattrsVo> groupWithAttrs = new ArrayList<>(records.size());
+        List<AttrGroupWithAttrsVo> groupWithAttrs = new ArrayList<>(records.size());
         for (AttrGroupEntity record : records) {
             //1、创建一个vo准备收集所有需要的数据
-            AttrGroupWithattrsVo vo = new AttrGroupWithattrsVo();
+            AttrGroupWithAttrsVo vo = new AttrGroupWithAttrsVo();
             BeanUtils.copyProperties(record,vo);
 
             Long groupId = record.getAttrGroupId();

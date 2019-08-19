@@ -3,10 +3,12 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.204.130:3306/guli_pms?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    url: jdbc:mysql://192.168.204.132:3306/guli_pms?useUnicode=true&characterEncoding=UTF-8&useSSL=false
     username: root
     password: root
-
+  redis:
+    host: 192.168.204.132
+    port: 6379
 mybatis-plus:
   mapper-locations: classpath:/mapper/pms/*.xml
   global-config:

@@ -9,7 +9,7 @@ spring:
         - id: pms_route
           uri: lb://gulimall-pms
           predicates:
-            - Path=/pms/**
+            - Path=/pms/**,/api/**
 
         - id: gulimall-oms_route
           uri: lb://gulimall-oms
@@ -31,7 +31,15 @@ spring:
           predicates:
             - Path=/wms/**
 
+        - id: gulimall-search_route
+          uri: lb://gulimall-search
+          predicates:
+            - Path=/search/**
 
+        - id: gulimall-cart_route
+          uri: lb://gulimall-cart
+          predicates:
+            - Path=/cart/**
 
 #      globalcors:
 #        cors-configurations:
