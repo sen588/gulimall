@@ -1,10 +1,12 @@
 package com.atguigu.gulimall.cart.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.atguigu.gulimall.cart.feign.PmsFeignService;
+import com.atguigu.gulimall.cart.feign.SmsFeignService;
 import com.atguigu.gulimall.cart.service.CartService;
-import com.atguigu.gulimall.cart.vo.CartItemVo;
-import com.atguigu.gulimall.cart.vo.CartKey;
-import com.atguigu.gulimall.cart.vo.CartVo;
+import com.atguigu.gulimall.cart.to.SkuCouponTo;
+import com.atguigu.gulimall.cart.vo.*;
 import com.atguigu.gulimall.commons.bean.Constant;
 import com.atguigu.gulimall.commons.bean.Resp;
 import com.atguigu.gulimall.commons.to.SkuInfoVo;
@@ -13,12 +15,14 @@ import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -28,6 +32,59 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private RedissonClient redisson;
+
+    @Autowired
+    @Qualifier("otherExecutor")
+    private ThreadPoolExecutor executor;
+
+    /**
+     * 远程fengin
+     */
+    @Autowired
+    private PmsFeignService pmsFeignService;
+    
+    @Autowired
+    private SmsFeignService smsFeignService;
+
+
+    @Override
+    public CartVo checkCart(Long[] skuId, Integer status, String userKey, String authorization) {
+        CartKey key = getKey(userKey, authorization);
+        String keyKey = key.getKey();
+        RMap<String, String> cart = redisson.getMap(Constant.CART_PREFIX + keyKey);
+        if(skuId!=null && skuId.length>0)
+        {
+            for (Long sku : skuId) {
+                String json = cart.get(sku.toString());
+                CartItemVo cartItemVo = JSON.parseObject(json, CartItemVo.class);
+                cartItemVo.setCheck(status==0 ? false : true);
+                cart.put(sku.toString(), JSON.toJSONString(cartItemVo));
+            }
+        }
+        List<CartItemVo> cartItems = getCartItems(keyKey);
+        CartVo cartVo = new CartVo();
+        cartVo.setItems(cartItems);
+        return null;
+    }
+
+    @Override
+    public CartVo updateCart(Long skuId, Integer num, String userKey, String authorization) {
+        CartKey key = getKey(userKey, authorization);
+        String keyKey = key.getKey();
+
+        RMap<String, String> cart = redisson.getMap(Constant.CART_PREFIX + keyKey);
+
+        String itemJson = cart.get(skuId.toString());
+        CartItemVo itemVo = JSON.parseObject(itemJson, CartItemVo.class);
+        itemVo.setNum(num);
+        //修改购物车，覆盖redis数据；
+        cart.put(skuId.toString(), JSON.toJSONString(itemVo));
+
+        List<CartItemVo> cartItems = getCartItems(keyKey);
+        CartVo cartVo = new CartVo();
+        cartVo.setItems(cartItems);
+        return cartVo;
+    }
 
 
     @Override
@@ -155,17 +212,71 @@ public class CartServiceImpl implements CartService {
         }else {
             CartItemVo cartItemVo = new CartItemVo();
             //1）、封装基本信息
-           /* CompletableFuture<Void> infoAsync = CompletableFuture.runAsync(() -> {
+            CompletableFuture<Void> infoAsync = CompletableFuture.runAsync(() -> {
                 //1、查询sku当前商品的详情；
-                Resp<SkuInfoVo> sKuInfoForCart = skuFeignService.getSKuInfoForCart(skuId);
+                Resp<SkuInfoVo> sKuInfoForCart = pmsFeignService.getSKuInfoForCart(skuId);
                 SkuInfoVo data = sKuInfoForCart.getData();
                 //2、购物项
-                BeanUtils.copyProperties(data, itemVo);
-                itemVo.setNum(num);
-            }, executor);*/
+                BeanUtils.copyProperties(data, cartItemVo);
+                cartItemVo.setNum(num);
+            }, executor);
 
+            //封装优惠信息
+            CompletableFuture<Void> couponAsync = CompletableFuture.runAsync(() -> {
+                //获取优惠券当前的基本信息
+                Resp<List<SkuCouponTo>> coupons = smsFeignService.getCoupons(skuId);
+                //To封装别人传来的数据
+                List<SkuCouponTo> data = coupons.getData();
+                //vo提取别人传来的数据里面有用的数据
+                List<SkuCouponVo> vos = new ArrayList<>();
+                if (data != null && data.size() > 0) {
+                    for (SkuCouponTo datum : data) {
+                        SkuCouponVo couponVo = new SkuCouponVo();
+                        BeanUtils.copyProperties(datum, couponVo);
+                        vos.add(couponVo);
+                    }
+                }
+                cartItemVo.setCoupons(vos);
+            }, executor);
+            //封装商品的满减信息
+            CompletableFuture<Void> reductionAsync = CompletableFuture.runAsync(() -> {
+                Resp<List<SkuFullReductionVo>> redutions = smsFeignService.getRedutions(skuId);
+                List<SkuFullReductionVo> data = redutions.getData();
+                if (data != null && data.size() > 0) {
+                    cartItemVo.setReductions(data);
+                }
+            }, executor);
+            CompletableFuture<Void> future = CompletableFuture.allOf(infoAsync, couponAsync, reductionAsync);
+            try {
+                future.get();
+            } catch (Exception e) {
 
+            }
+            //3、保存购物车数据
+            cart.put(skuId.toString(), JSON.toJSONString(cartItemVo));
+            vo = cartItemVo;
         }
         return vo;
+    }
+
+    /**
+     * 不用传递前缀
+     *
+     * @param cartKey
+     *
+     * @return
+     */
+    private List<CartItemVo> getCartItems(String cartKey) {
+        List<CartItemVo> vos = new ArrayList<>();
+        //1、没登录获取临时购物车
+        RMap<String, String> cart = redisson.getMap(Constant.CART_PREFIX + cartKey);
+        Collection<String> values = cart.values();
+        if (values != null && values.size() > 0) {
+            for (String value : values) {
+                CartItemVo itemVo = JSON.parseObject(value, CartItemVo.class);
+                vos.add(itemVo);
+            }
+        }
+        return vos;
     }
 }

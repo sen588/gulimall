@@ -27,5 +27,12 @@
         <result property="publish" column="publish"/>
     </resultMap>
 
-
+    <!--    List<CouponEntity> selectCouponsBySpuId(Long spuId);-->
+    <select id="selectCouponsBySpuId" resultMap="couponMap">
+        SELECT a.`id`, a.`coupon_name`, a.`amount`
+        FROM `sms_coupon` a
+        LEFT JOIN `sms_coupon_spu_relation` b
+        ON b.`coupon_id`=a.`id`
+        WHERE b.`spu_id`=#{spuId}
+     </select>
 </mapper>
